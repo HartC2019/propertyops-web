@@ -3,6 +3,16 @@ import { Link, useNavigate } from "react-router";
 
 import { useAuth } from "./AuthContext";
 
+import {
+  Alert,
+  Box,
+  Button,
+  Container,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+
 /** A form that allows users to log into an existing account. */
 export default function Login() {
   const { login } = useAuth();
@@ -22,21 +32,44 @@ export default function Login() {
   };
 
   return (
-    <>
-      <h1>Log in to your account</h1>
-      <form action={onLogin}>
-        <label>
-          Username
-          <input type="username" name="username" required />
-        </label>
-        <label>
-          Password
-          <input type="password" name="password" required />
-        </label>
-        <button>Login</button>
-        {error && <output>{error}</output>}
-      </form>
-      <Link to="/register">Need an account? Register here.</Link>
-    </>
+    <Container maxWidth="sm">
+      <Box sx={{ py: 6 }}>
+        <Stack spacing={3}>
+          <Typography variant="h4" component="h1">
+            Log in to PropertyPilot
+          </Typography>
+
+          <Box component="form" action={onLogin}>
+            <Stack spacing={2}>
+              <TextField
+                label="Username"
+                name="username"
+                type="text"
+                required
+                fullWidth
+              />
+
+              <TextField
+                label="Password"
+                name="password"
+                type="password"
+                required
+                fullWidth
+              />
+
+              <Button type="submit" variant="contained">
+                Log in
+              </Button>
+
+              {error && <Alert severity="error">{error}</Alert>}
+            </Stack>
+          </Box>
+
+          <Typography>
+            Don't have an account? <Link to="/register">Create one</Link>
+          </Typography>
+        </Stack>
+      </Box>
+    </Container>
   );
 }
