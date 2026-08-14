@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   CardMedia,
+  CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Stack,
   Tab,
   Tabs,
@@ -15,16 +22,18 @@ import {
 } from "@mui/material";
 
 import { useAuth } from "../auth/AuthContext";
-import { getProperty } from "../api/properties";
+import { deleteProperty, getProperty } from "../api/properties";
 
 export default function PropertyDetailPage() {
   const { propertyId } = useParams();
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [property, setProperty] = useState(null);
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadProperty() {
@@ -44,9 +53,23 @@ export default function PropertyDetailPage() {
   if (loading) {
     return (
       <Container sx={{ py: 4 }}>
-        <Typography>Loading property...</Typography>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography>Loading property...</Typography>
+        </Stack>
       </Container>
     );
+  }
+
+  async function handleDelete() {
+    try {
+      await deleteProperty(propertyId, token);
+
+      navigate("/properties");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Unable to delete property.");
+    }
   }
 
   if (error) {
@@ -97,7 +120,11 @@ export default function PropertyDetailPage() {
                 Edit
               </Button>
 
-              <Button variant="outlined" color="error">
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
                 Delete
               </Button>
             </Stack>
@@ -179,6 +206,26 @@ export default function PropertyDetailPage() {
           )}
         </CardContent>
       </Card>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Are you sure?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Deleting the property is permanent.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+
+          <Button color="error" variant="contained" onClick={handleDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
