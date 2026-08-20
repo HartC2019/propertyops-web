@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -22,7 +22,11 @@ import {
 } from "@mui/material";
 
 import { useAuth } from "../auth/AuthContext";
+import { formatDate } from "../utils/formatDate";
 import { deleteProperty, getProperty } from "../api/properties";
+import { createIncome, deleteIncome, getIncome } from "../api/income";
+import IncomeTable from "../components/income/IncomeTable";
+import IncomeForm from "../components/income/IncomeForm";
 
 export default function PropertyDetailPage() {
   const { propertyId } = useParams();
@@ -30,10 +34,22 @@ export default function PropertyDetailPage() {
   const navigate = useNavigate();
 
   const [property, setProperty] = useState(null);
+  const [income, setIncome] = useState([]);
   const [tab, setTab] = useState(0);
+
   const [loading, setLoading] = useState(true);
+  const [incomeLoading, setIncomeLoading] = useState(false);
+
   const [error, setError] = useState("");
+  const [incomeError, setIncomeError] = useState("");
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [incomeDeleteDialogOpen, setIncomeDeleteDialogOpen] = useState(false);
+  const [selectedIncome, setSelectedIncome] = useState(null);
+
+  const [incomeFormOpen, setIncomeFormOpen] = useState(false);
+
+  const tabContentRef = useRef(null);
 
   useEffect(() => {
     async function loadProperty() {
@@ -50,6 +66,24 @@ export default function PropertyDetailPage() {
     loadProperty();
   }, [propertyId, token]);
 
+  useEffect(() => {
+    async function loadIncome() {
+      setIncomeLoading(true);
+      setIncomeError("");
+
+      try {
+        const data = await getIncome(propertyId, token);
+        setIncome(data);
+      } catch (err) {
+        setIncomeError(err.message);
+      } finally {
+        setIncomeLoading(false);
+      }
+    }
+
+    loadIncome();
+  }, [propertyId, token]);
+
   if (loading) {
     return (
       <Container sx={{ py: 4 }}>
@@ -61,10 +95,35 @@ export default function PropertyDetailPage() {
     );
   }
 
+  if (error) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Typography color="error">{error}</Typography>
+      </Container>
+    );
+  }
+
+  async function handleCreateIncome(incomeData) {
+    const createdIncome = await createIncome(
+      {
+        ...incomeData,
+        property_id: Number(propertyId),
+      },
+      token,
+    );
+
+    setIncome((currentIncome) =>
+      [createdIncome, ...currentIncome].sort(
+        (a, b) => new Date(b.payment_date) - new Date(a.payment_date),
+      ),
+    );
+
+    setIncomeFormOpen(false);
+  }
+
   async function handleDelete() {
     try {
       await deleteProperty(propertyId, token);
-
       navigate("/properties");
     } catch (err) {
       console.error(err);
@@ -72,12 +131,35 @@ export default function PropertyDetailPage() {
     }
   }
 
-  if (error) {
-    return (
-      <Container sx={{ py: 4 }}>
-        <Typography color="error">{error}</Typography>
-      </Container>
-    );
+  function handleDeleteIncomeClick(record) {
+    setSelectedIncome(record);
+    setIncomeDeleteDialogOpen(true);
+  }
+
+  async function handleDeleteIncome() {
+    try {
+      await deleteIncome(selectedIncome.id, token);
+
+      setIncome((currentIncome) =>
+        currentIncome.filter((record) => record.id !== selectedIncome.id),
+      );
+
+      setIncomeDeleteDialogOpen(false);
+      setSelectedIncome(null);
+    } catch (err) {
+      setIncomeError(err.message || "Unable to delete income.");
+    }
+  }
+
+  function handleTabChange(event, value) {
+    setTab(value);
+
+    setTimeout(() => {
+      tabContentRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
   }
 
   return (
@@ -130,91 +212,136 @@ export default function PropertyDetailPage() {
             </Stack>
           </Stack>
 
-          <Tabs
-            value={tab}
-            onChange={(e, value) => setTab(value)}
-            sx={{ mb: 3 }}
-          >
+          <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 3 }}>
             <Tab label="Overview" />
             <Tab label="Financial" />
+            <Tab label="Income" />
             <Tab label="Utilities" />
             <Tab label="Notes" />
           </Tabs>
 
-          {tab === 0 && (
-            <Stack spacing={2}>
-              <Typography>
-                <strong>Property Type:</strong> {property.property_type}
-              </Typography>
+          <Box ref={tabContentRef}>
+            {tab === 0 && (
+              <Stack spacing={2}>
+                <Typography>
+                  <strong>Property Type:</strong> {property.property_type}
+                </Typography>
 
-              <Typography>
-                <strong>Bedrooms:</strong> {property.bedrooms}
-              </Typography>
+                <Typography>
+                  <strong>Bedrooms:</strong> {property.bedrooms}
+                </Typography>
 
-              <Typography>
-                <strong>Bathrooms:</strong> {property.bathrooms}
-              </Typography>
+                <Typography>
+                  <strong>Bathrooms:</strong> {property.bathrooms}
+                </Typography>
 
-              <Typography>
-                <strong>Square Feet:</strong> {property.square_feet}
-              </Typography>
+                <Typography>
+                  <strong>Square Feet:</strong> {property.square_feet}
+                </Typography>
 
-              <Typography>
-                <strong>Year Built:</strong> {property.year_built}
-              </Typography>
-            </Stack>
-          )}
+                <Typography>
+                  <strong>Year Built:</strong> {property.year_built}
+                </Typography>
+              </Stack>
+            )}
 
-          {tab === 1 && (
-            <Stack spacing={2}>
-              <Typography>
-                <strong>Purchase Price:</strong> ${property.purchase_price}
-              </Typography>
+            {tab === 1 && (
+              <Stack spacing={2}>
+                <Typography>
+                  <strong>Purchase Price:</strong> ${property.purchase_price}
+                </Typography>
 
-              <Typography>
-                <strong>Monthly Rent:</strong> ${property.monthly_rent}
-              </Typography>
+                <Typography>
+                  <strong>Monthly Rent:</strong> ${property.monthly_rent}
+                </Typography>
 
-              <Typography>
-                <strong>Purchase Date:</strong> {property.purchase_date}
-              </Typography>
-            </Stack>
-          )}
+                <Typography>
+                  <strong>Purchase Date:</strong>{" "}
+                  {formatDate(property.purchase_date)}
+                </Typography>
+              </Stack>
+            )}
 
-          {tab === 2 && (
-            <Stack spacing={2}>
-              <Typography>
-                <strong>Electric:</strong> {property.electric_paid_by}
-              </Typography>
+            {tab === 2 && (
+              <Stack spacing={2}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="h5">Income</Typography>
 
-              <Typography>
-                <strong>Water:</strong> {property.water_paid_by}
-              </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      setIncomeFormOpen(true);
+                    }}
+                  >
+                    Add Income
+                  </Button>
+                </Stack>
 
-              <Typography>
-                <strong>Gas:</strong> {property.gas_paid_by}
-              </Typography>
+                {incomeLoading && (
+                  <Stack spacing={2} alignItems="center" sx={{ py: 4 }}>
+                    <CircularProgress />
+                    <Typography>Loading income...</Typography>
+                  </Stack>
+                )}
 
-              <Typography>
-                <strong>Trash:</strong> {property.trash_paid_by}
-              </Typography>
-            </Stack>
-          )}
+                {incomeError && <Alert severity="error">{incomeError}</Alert>}
 
-          {tab === 3 && (
-            <Typography>{property.notes || "No notes provided."}</Typography>
-          )}
+                {!incomeLoading && !incomeError && income.length === 0 && (
+                  <Alert severity="info">
+                    No income recorded for this property.
+                  </Alert>
+                )}
+
+                {!incomeLoading && !incomeError && income.length > 0 && (
+                  <IncomeTable
+                    income={income}
+                    onDelete={handleDeleteIncomeClick}
+                  />
+                )}
+              </Stack>
+            )}
+
+            {tab === 3 && (
+              <Stack spacing={2}>
+                <Typography>
+                  <strong>Electric:</strong> {property.electric_paid_by}
+                </Typography>
+
+                <Typography>
+                  <strong>Water:</strong> {property.water_paid_by}
+                </Typography>
+
+                <Typography>
+                  <strong>Gas:</strong> {property.gas_paid_by}
+                </Typography>
+
+                <Typography>
+                  <strong>Trash:</strong> {property.trash_paid_by}
+                </Typography>
+              </Stack>
+            )}
+
+            {tab === 4 && (
+              <Typography>{property.notes || "No notes provided."}</Typography>
+            )}
+          </Box>
         </CardContent>
       </Card>
+
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Are you sure?</DialogTitle>
+        <DialogTitle>Delete property?</DialogTitle>
 
         <DialogContent>
           <DialogContentText>
-            Deleting the property is permanent.
+            Are you sure you want to delete this property? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
 
@@ -222,6 +349,40 @@ export default function PropertyDetailPage() {
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
 
           <Button color="error" variant="contained" onClick={handleDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <IncomeForm
+        open={incomeFormOpen}
+        onClose={() => setIncomeFormOpen(false)}
+        onSubmit={handleCreateIncome}
+      />
+
+      <Dialog
+        open={incomeDeleteDialogOpen}
+        onClose={() => setIncomeDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete income?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this income record? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setIncomeDeleteDialogOpen(false)}>
+            Cancel
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDeleteIncome}
+          >
             Delete
           </Button>
         </DialogActions>
