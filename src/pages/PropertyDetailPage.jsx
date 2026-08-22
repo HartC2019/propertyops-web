@@ -27,6 +27,9 @@ import { deleteProperty, getProperty } from "../api/properties";
 import { createIncome, deleteIncome, getIncome } from "../api/income";
 import IncomeTable from "../components/income/IncomeTable";
 import IncomeForm from "../components/income/IncomeForm";
+import { createExpense, deleteExpense, getExpenses } from "../api/expenses";
+import ExpenseTable from "../components/expenses/ExpenseTable";
+import ExpenseForm from "../components/expenses/ExpenseForm";
 
 export default function PropertyDetailPage() {
   const { propertyId } = useParams();
@@ -48,6 +51,16 @@ export default function PropertyDetailPage() {
   const [selectedIncome, setSelectedIncome] = useState(null);
 
   const [incomeFormOpen, setIncomeFormOpen] = useState(false);
+
+  const [expenses, setExpenses] = useState([]);
+  const [expenseLoading, setExpenseLoading] = useState(false);
+  const [expenseError, setExpenseError] = useState("");
+
+  const [expenseDeleteDialogOpen, setExpenseDeleteDialogOpen] = useState(false);
+
+  const [selectedExpense, setSelectedExpense] = useState(null);
+
+  const [expenseFormOpen, setExpenseFormOpen] = useState(false);
 
   const tabContentRef = useRef(null);
 
@@ -82,6 +95,24 @@ export default function PropertyDetailPage() {
     }
 
     loadIncome();
+  }, [propertyId, token]);
+
+  useEffect(() => {
+    async function loadExpenses() {
+      setExpenseLoading(true);
+      setExpenseError("");
+
+      try {
+        const data = await getExpenses(propertyId, token);
+        setExpenses(data);
+      } catch (err) {
+        setExpenseError(err.message);
+      } finally {
+        setExpenseLoading(false);
+      }
+    }
+
+    loadExpenses();
   }, [propertyId, token]);
 
   if (loading) {
@@ -151,6 +182,44 @@ export default function PropertyDetailPage() {
     }
   }
 
+  async function handleCreateExpense(expenseData) {
+    const createdExpense = await createExpense(
+      {
+        ...expenseData,
+        property_id: Number(propertyId),
+      },
+      token,
+    );
+
+    setExpenses((currentExpenses) =>
+      [createdExpense, ...currentExpenses].sort(
+        (a, b) => new Date(b.expense_date) - new Date(a.expense_date),
+      ),
+    );
+
+    setExpenseFormOpen(false);
+  }
+
+  function handleDeleteExpenseClick(expense) {
+    setSelectedExpense(expense);
+    setExpenseDeleteDialogOpen(true);
+  }
+
+  async function handleDeleteExpense() {
+    try {
+      await deleteExpense(selectedExpense.id, token);
+
+      setExpenses((currentExpenses) =>
+        currentExpenses.filter((expense) => expense.id !== selectedExpense.id),
+      );
+
+      setExpenseDeleteDialogOpen(false);
+      setSelectedExpense(null);
+    } catch (err) {
+      setExpenseError(err.message || "Unable to delete expense.");
+    }
+  }
+
   function handleTabChange(event, value) {
     setTab(value);
 
@@ -216,6 +285,7 @@ export default function PropertyDetailPage() {
             <Tab label="Overview" />
             <Tab label="Financial" />
             <Tab label="Income" />
+            <Tab label="Expenses" />
             <Tab label="Utilities" />
             <Tab label="Notes" />
           </Tabs>
@@ -307,6 +377,47 @@ export default function PropertyDetailPage() {
 
             {tab === 3 && (
               <Stack spacing={2}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="h5">Expenses</Typography>
+
+                  <Button
+                    variant="contained"
+                    onClick={() => setExpenseFormOpen(true)}
+                  >
+                    Add Expense
+                  </Button>
+                </Stack>
+
+                {expenseLoading && (
+                  <Stack spacing={2} alignItems="center" sx={{ py: 4 }}>
+                    <CircularProgress />
+                    <Typography>Loading expenses...</Typography>
+                  </Stack>
+                )}
+
+                {expenseError && <Alert severity="error">{expenseError}</Alert>}
+
+                {!expenseLoading && !expenseError && expenses.length === 0 && (
+                  <Alert severity="info">
+                    No expenses recorded for this property.
+                  </Alert>
+                )}
+
+                {!expenseLoading && !expenseError && expenses.length > 0 && (
+                  <ExpenseTable
+                    expenses={expenses}
+                    onDelete={handleDeleteExpenseClick}
+                  />
+                )}
+              </Stack>
+            )}
+
+            {tab === 4 && (
+              <Stack spacing={2}>
                 <Typography>
                   <strong>Electric:</strong> {property.electric_paid_by}
                 </Typography>
@@ -325,7 +436,7 @@ export default function PropertyDetailPage() {
               </Stack>
             )}
 
-            {tab === 4 && (
+            {tab === 5 && (
               <Typography>{property.notes || "No notes provided."}</Typography>
             )}
           </Box>
@@ -360,6 +471,12 @@ export default function PropertyDetailPage() {
         onSubmit={handleCreateIncome}
       />
 
+      <ExpenseForm
+        open={expenseFormOpen}
+        onClose={() => setExpenseFormOpen(false)}
+        onSubmit={handleCreateExpense}
+      />
+
       <Dialog
         open={incomeDeleteDialogOpen}
         onClose={() => setIncomeDeleteDialogOpen(false)}
@@ -382,6 +499,34 @@ export default function PropertyDetailPage() {
             color="error"
             variant="contained"
             onClick={handleDeleteIncome}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={expenseDeleteDialogOpen}
+        onClose={() => setExpenseDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete expense?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this expense record? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setExpenseDeleteDialogOpen(false)}>
+            Cancel
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDeleteExpense}
           >
             Delete
           </Button>
