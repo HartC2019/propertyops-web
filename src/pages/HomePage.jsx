@@ -124,6 +124,16 @@ export default function HomePage() {
       <Box sx={{ mt: 4 }}>
         <RecentProperties properties={dashboard.recentProperties} />
       </Box>
+
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" mb={2}>
+          Reports
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          Coming soon
+        </Typography>
+      </Box>
     </Container>
   );
 }
