@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 import {
   Alert,
@@ -63,6 +68,10 @@ export default function PropertyDetailPage() {
   const [expenseFormOpen, setExpenseFormOpen] = useState(false);
 
   const tabContentRef = useRef(null);
+
+  const location = useLocation();
+
+  const backToDashboard = location.state?.from === "dashboard";
 
   useEffect(() => {
     async function loadProperty() {
@@ -233,8 +242,12 @@ export default function PropertyDetailPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Button component={RouterLink} to="/properties" sx={{ mb: 3 }}>
-        ← Back to Properties
+      <Button
+        component={RouterLink}
+        to={backToDashboard ? "/" : "/properties"}
+        sx={{ mb: 3 }}
+      >
+        ← Back to {backToDashboard ? "Dashboard" : "Properties"}
       </Button>
 
       <Card>

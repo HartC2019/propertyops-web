@@ -6,6 +6,7 @@ import Login from "./auth/Login";
 import Register from "./auth/Register";
 import RequireAuth from "./auth/RequireAuth";
 
+import HomePage from "./pages/HomePage";
 import PropertiesPage from "./pages/PropertiesPage";
 import PropertyDetailPage from "./pages/PropertyDetailPage";
 import CreatePropertyPage from "./pages/CreatePropertyPage";
@@ -21,7 +22,7 @@ export default function App() {
 
         {/* Protected Routes */}
         <Route element={<RequireAuth />}>
-          <Route index element={<PropertiesPage />} />
+          <Route index element={<HomePage />} />
 
           <Route path="/properties" element={<PropertiesPage />} />
 
