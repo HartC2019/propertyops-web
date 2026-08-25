@@ -9,10 +9,12 @@ import {
   Grid,
   Stack,
   Typography,
+  Box,
 } from "@mui/material";
 
 import { useAuth } from "../auth/AuthContext";
 import { getDashboard } from "../api/dashboard";
+import RecentProperties from "../components/dashboard/RecentProperties";
 
 export default function HomePage() {
   const { token } = useAuth();
@@ -119,6 +121,9 @@ export default function HomePage() {
           </Card>
         </Grid>
       </Grid>
+      <Box sx={{ mt: 4 }}>
+        <RecentProperties properties={dashboard.recentProperties} />
+      </Box>
     </Container>
   );
 }
