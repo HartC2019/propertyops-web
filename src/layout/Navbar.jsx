@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 import {
-  AppBar,
   Box,
   Button,
   Divider,
@@ -13,8 +12,6 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -26,9 +23,6 @@ const drawerWidth = 240;
 export default function Navbar() {
   const { token, logout } = useAuth();
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleDrawerToggle() {
@@ -37,6 +31,10 @@ export default function Navbar() {
 
   function handleNavigation() {
     setMobileOpen(false);
+  }
+
+  if (!token) {
+    return null;
   }
 
   const navigationItems = [
@@ -51,7 +49,13 @@ export default function Navbar() {
   ];
 
   const drawer = (
-    <Box sx={{ height: "100%" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Toolbar>
         <Typography variant="h6">PropertyPilot</Typography>
       </Toolbar>
@@ -84,49 +88,8 @@ export default function Navbar() {
     </Box>
   );
 
-  if (!token) {
-    return (
-      <AppBar position="static">
-        <Toolbar>
-          <Typography
-            component={NavLink}
-            to="/login"
-            sx={{
-              color: "inherit",
-              textDecoration: "none",
-              fontWeight: "bold",
-            }}
-          >
-            PropertyPilot
-          </Typography>
-        </Toolbar>
-      </AppBar>
-    );
-  }
-
   return (
     <>
-      <AppBar
-        position="fixed"
-        sx={{
-          display: { md: "none" },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            aria-label="open navigation menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          <Typography variant="h6">PropertyPilot</Typography>
-        </Toolbar>
-      </AppBar>
-
       <Box
         component="nav"
         sx={{
@@ -165,6 +128,20 @@ export default function Navbar() {
         >
           {drawer}
         </Drawer>
+      </Box>
+
+      <Box
+        sx={{
+          display: { xs: "block", md: "none" },
+        }}
+      >
+        <IconButton
+          color="inherit"
+          onClick={handleDrawerToggle}
+          aria-label="open navigation menu"
+        >
+          <MenuIcon />
+        </IconButton>
       </Box>
     </>
   );

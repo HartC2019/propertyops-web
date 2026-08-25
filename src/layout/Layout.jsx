@@ -2,10 +2,13 @@ import { Box, Toolbar } from "@mui/material";
 import { Outlet } from "react-router-dom";
 
 import Navbar from "./Navbar";
+import { useAuth } from "../auth/AuthContext";
 
 const drawerWidth = 240;
 
 export default function Layout() {
+  const { token } = useAuth();
+
   return (
     <Box sx={{ display: "flex" }}>
       <Navbar />
@@ -14,12 +17,14 @@ export default function Layout() {
         component="main"
         sx={{
           flexGrow: 1,
-          width: {
-            md: `calc(100% - ${drawerWidth}px)`,
-          },
+          width: token
+            ? {
+                md: `calc(100% - ${drawerWidth}px)`,
+              }
+            : "100%",
         }}
       >
-        <Toolbar sx={{ display: { xs: "flex", md: "none" } }} />
+        {token && <Toolbar sx={{ display: { xs: "flex", md: "none" } }} />}
 
         <Outlet />
       </Box>
