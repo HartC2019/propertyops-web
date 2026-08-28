@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import {
+  Box,
   IconButton,
   Paper,
   Table,
@@ -69,6 +70,7 @@ export default function ExpenseTable({ expenses, onDelete }) {
 
     setOrder(isAscending ? "desc" : "asc");
     setOrderBy(property);
+    setPage(0);
   }
 
   function handleChangePage(event, newPage) {
@@ -81,15 +83,15 @@ export default function ExpenseTable({ expenses, onDelete }) {
   }
 
   return (
-    <>
-      <Typography variant="h6">
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Total Expenses: ${totalExpenses.toFixed(2)}
       </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ bgcolor: "action.hover" }}>
               <TableCell>
                 <TableSortLabel
                   active={orderBy === "expense_date"}
@@ -121,40 +123,43 @@ export default function ExpenseTable({ expenses, onDelete }) {
               </TableCell>
 
               <TableCell>Note</TableCell>
-
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
             {visibleExpenses.map((expense) => (
-              <TableRow key={expense.id}>
+              <TableRow
+                key={expense.id}
+                hover
+                sx={{ "&:last-child td": { borderBottom: 0 } }}
+              >
                 <TableCell>{formatDate(expense.expense_date)}</TableCell>
-
                 <TableCell>{expense.category || "—"}</TableCell>
 
-                <TableCell>${Number(expense.amount).toFixed(2)}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  ${Number(expense.amount).toFixed(2)}
+                </TableCell>
 
-                <TableCell
-                  sx={{
-                    maxWidth: 250,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <TableCell sx={{ maxWidth: 250 }}>
                   {expense.note ? (
-                    <Tooltip title={expense.note}>
-                      <span>{expense.note}</span>
+                    <Tooltip title={expense.note} arrow>
+                      <Typography noWrap color="text.secondary">
+                        {expense.note}
+                      </Typography>
                     </Tooltip>
                   ) : (
-                    "—"
+                    <Typography color="text.secondary">—</Typography>
                   )}
                 </TableCell>
 
                 <TableCell align="right">
                   <Tooltip title="Delete expense">
-                    <IconButton color="error" onClick={() => onDelete(expense)}>
+                    <IconButton
+                      color="error"
+                      onClick={() => onDelete(expense)}
+                      aria-label={`Delete expense ${expense.id}`}
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
@@ -174,6 +179,6 @@ export default function ExpenseTable({ expenses, onDelete }) {
           rowsPerPageOptions={[5, 10, 25]}
         />
       </TableContainer>
-    </>
+    </Box>
   );
 }

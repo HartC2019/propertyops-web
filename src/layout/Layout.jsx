@@ -10,13 +10,20 @@ export default function Layout() {
   const { token } = useAuth();
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
       <Navbar />
 
       <Box
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           width: token
             ? {
                 md: `calc(100% - ${drawerWidth}px)`,

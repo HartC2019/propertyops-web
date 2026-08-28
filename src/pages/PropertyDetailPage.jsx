@@ -35,6 +35,7 @@ import IncomeForm from "../components/income/IncomeForm";
 import { createExpense, deleteExpense, getExpenses } from "../api/expenses";
 import ExpenseTable from "../components/expenses/ExpenseTable";
 import ExpenseForm from "../components/expenses/ExpenseForm";
+import { getPropertyImage } from "../utils/propertyImages";
 
 export default function PropertyDetailPage() {
   const { propertyId } = useParams();
@@ -254,16 +255,24 @@ export default function PropertyDetailPage() {
         <CardMedia
           component="img"
           height="320"
-          image={property.cover_image_url}
+          image={getPropertyImage(property.cover_image_url)}
           alt={property.nickname}
+          sx={{ objectFit: "cover" }}
         />
 
         <CardContent>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start"
-            mb={3}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "minmax(0, 1fr) auto",
+              },
+              gap: 2,
+              alignItems: "start",
+              width: "100%",
+              mb: 3,
+            }}
           >
             <Box>
               <Typography variant="h4">{property.nickname}</Typography>
@@ -275,15 +284,13 @@ export default function PropertyDetailPage() {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="contained"
-                component={RouterLink}
-                to={`/properties/${property.id}/edit`}
-              >
-                Edit
-              </Button>
-
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{
+                justifySelf: { xs: "end", sm: "end" },
+              }}
+            >
               <Button
                 variant="outlined"
                 color="error"
@@ -291,8 +298,16 @@ export default function PropertyDetailPage() {
               >
                 Delete
               </Button>
+
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to={`/properties/${property.id}/edit`}
+              >
+                Edit
+              </Button>
             </Stack>
-          </Stack>
+          </Box>
 
           <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 3 }}>
             <Tab label="Overview" />
@@ -346,7 +361,7 @@ export default function PropertyDetailPage() {
             )}
 
             {tab === 2 && (
-              <Stack spacing={2}>
+              <Stack spacing={2} sx={{ width: "100%" }}>
                 <Stack
                   direction="row"
                   justifyContent="space-between"
@@ -359,6 +374,7 @@ export default function PropertyDetailPage() {
                     onClick={() => {
                       setIncomeFormOpen(true);
                     }}
+                    sx={{ ml: "auto", flexShrink: 0 }}
                   >
                     Add Income
                   </Button>
@@ -389,7 +405,7 @@ export default function PropertyDetailPage() {
             )}
 
             {tab === 3 && (
-              <Stack spacing={2}>
+              <Stack spacing={2} sx={{ width: "100%" }}>
                 <Stack
                   direction="row"
                   justifyContent="space-between"
@@ -400,6 +416,7 @@ export default function PropertyDetailPage() {
                   <Button
                     variant="contained"
                     onClick={() => setExpenseFormOpen(true)}
+                    sx={{ ml: "auto", flexShrink: 0 }}
                   >
                     Add Expense
                   </Button>

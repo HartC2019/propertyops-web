@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import {
   Alert,
+  Box,
   CircularProgress,
   Container,
   Stack,
@@ -10,13 +11,9 @@ import {
 } from "@mui/material";
 
 import { useAuth } from "../auth/AuthContext";
-
 import { getProperty, updateProperty } from "../api/properties";
-
 import PropertyForm from "../components/properties/PropertyForm";
-
-const DEFAULT_IMAGE =
-  "https://images.unsplash.com/photo-1568605114967-8130f3a36994";
+import { getDefaultPropertyImage } from "../utils/propertyImages";
 
 export default function EditPropertyPage() {
   const { propertyId } = useParams();
@@ -44,35 +41,27 @@ export default function EditPropertyPage() {
   }, [propertyId, token]);
 
   async function handleUpdate(formData) {
+    setError("");
+
     const propertyData = {
       ...formData,
-
       zip_code: Number(formData.zip_code),
-
       year_built: formData.year_built ? Number(formData.year_built) : null,
-
       bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
-
       bathrooms: formData.bathrooms ? Number(formData.bathrooms) : null,
-
       square_feet: formData.square_feet ? Number(formData.square_feet) : null,
-
       purchase_price: formData.purchase_price
         ? Number(formData.purchase_price)
         : null,
-
       monthly_rent: formData.monthly_rent
         ? Number(formData.monthly_rent)
         : null,
-
       purchase_date: formData.purchase_date || null,
-
-      cover_image_url: formData.cover_image_url || DEFAULT_IMAGE,
+      cover_image_url: formData.cover_image_url || getDefaultPropertyImage(),
     };
 
     try {
       await updateProperty(propertyId, propertyData, token);
-
       navigate(`/properties/${propertyId}`);
     } catch (err) {
       console.error(err);
@@ -91,7 +80,7 @@ export default function EditPropertyPage() {
     );
   }
 
-  if (error) {
+  if (error && !property) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error">{error}</Alert>
@@ -101,9 +90,18 @@ export default function EditPropertyPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" mb={4}>
-        Edit Property
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4">Edit Property</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+          Update the property details and save your changes.
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <PropertyForm
         initialValues={property}
