@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 import {
-  Button,
   Box,
+  Button,
   MenuItem,
   Paper,
   Stack,
@@ -33,6 +33,23 @@ const initialFormData = {
   notes: "",
 };
 
+const sectionPaperSx = {
+  pt: { xs: 2, sm: 2.25 },
+  px: { xs: 2, sm: 3 },
+  pb: { xs: 2.5, sm: 3 },
+};
+
+function FormSection({ title, children }) {
+  return (
+    <Paper sx={sectionPaperSx}>
+      <Typography variant="h6" sx={{ mb: 2.5 }}>
+        {title}
+      </Typography>
+      {children}
+    </Paper>
+  );
+}
+
 export default function PropertyForm({
   initialValues = {},
   onSubmit,
@@ -43,27 +60,27 @@ export default function PropertyForm({
     ...initialFormData,
     ...initialValues,
   });
-
   const [errors, setErrors] = useState({});
 
   function handleChange(event) {
     const { name, value } = event.target;
 
-    setFormData({
-      ...formData,
+    setFormData((currentData) => ({
+      ...currentData,
       [name]: value,
-    });
+    }));
 
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors((currentErrors) => ({
+        ...currentErrors,
         [name]: "",
-      });
+      }));
     }
   }
 
   function validateForm() {
     const newErrors = {};
+    const currentYear = new Date().getFullYear();
 
     if (!String(formData.nickname).trim()) {
       newErrors.nickname = "Property nickname is required.";
@@ -103,20 +120,14 @@ export default function PropertyForm({
 
     if (formData.year_built === "" || formData.year_built === null) {
       newErrors.year_built = "Year built is required.";
-    } else {
-      const currentYear = new Date().getFullYear();
-
-      if (
-        Number(formData.year_built) < 1800 ||
-        Number(formData.year_built) > currentYear
-      ) {
-        newErrors.year_built = `Year built must be between 1800 and ${currentYear}.`;
-      }
+    } else if (
+      Number(formData.year_built) < 1800 ||
+      Number(formData.year_built) > currentYear
+    ) {
+      newErrors.year_built = `Year built must be between 1800 and ${currentYear}.`;
     }
 
-    if (formData.square_feet !== "" && Number(formData.square_feet) <= 0) {
-      newErrors.square_feet = "Square feet are required.";
-    } else if (Number(formData.square_feet) <= 0) {
+    if (Number(formData.square_feet) <= 0) {
       newErrors.square_feet = "Square feet must be greater than 0.";
     }
 
@@ -129,7 +140,6 @@ export default function PropertyForm({
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }
 
@@ -155,13 +165,8 @@ export default function PropertyForm({
   }
 
   return (
-    <Stack component="form" spacing={4} onSubmit={handleSubmit} noValidate>
-      {/* Property Information */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Property Information
-        </Typography>
+    <Stack component="form" spacing={3} onSubmit={handleSubmit} noValidate>
+      <FormSection title="Property Information">
         <Box
           sx={{
             display: "grid",
@@ -169,7 +174,7 @@ export default function PropertyForm({
             gap: 2,
           }}
         >
-          <Box sx={{ gridColumn: { xs: "span 12" } }}>
+          <Box sx={{ gridColumn: "span 12" }}>
             <TextField
               fullWidth
               required
@@ -182,7 +187,7 @@ export default function PropertyForm({
             />
           </Box>
 
-          <Box sx={{ gridColumn: { xs: "span 12" } }}>
+          <Box sx={{ gridColumn: "span 12" }}>
             <TextField
               fullWidth
               required
@@ -234,31 +239,20 @@ export default function PropertyForm({
             />
           </Box>
         </Box>
-      </Paper>
+      </FormSection>
 
-      {/* Property Image */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Property Image
-        </Typography>
-
+      <FormSection title="Property Image">
         <TextField
           fullWidth
           label="Cover Image URL"
           name="cover_image_url"
           value={formData.cover_image_url}
           onChange={handleChange}
-          helperText="Optional. Leave blank to use the default property image."
+          helperText="Optional. Leave blank and we’ll choose one of the default property images for you."
         />
-      </Paper>
+      </FormSection>
 
-      {/* Property Details */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Property Details
-        </Typography>
+      <FormSection title="Property Details">
         <Box
           sx={{
             display: "grid",
@@ -278,63 +272,47 @@ export default function PropertyForm({
               error={Boolean(errors.property_type)}
               helperText={errors.property_type}
             >
-              <MenuItem value="Single Family">Single Family</MenuItem>
-              <MenuItem value="Duplex">Duplex</MenuItem>
-              <MenuItem value="Triplex">Triplex</MenuItem>
-              <MenuItem value="Fourplex">Fourplex</MenuItem>
-              <MenuItem value="Condo">Condo</MenuItem>
-              <MenuItem value="Townhome">Townhome</MenuItem>
+              {[
+                "Single Family",
+                "Duplex",
+                "Triplex",
+                "Fourplex",
+                "Condo",
+                "Townhome",
+              ].map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
             </TextField>
           </Box>
 
-          <Box sx={{ gridColumn: { xs: "span 4", md: "span 2" } }}>
-            <TextField
-              fullWidth
-              required
-              type="number"
-              label="Bedrooms"
-              name="bedrooms"
-              value={formData.bedrooms}
-              onChange={handleChange}
-              error={Boolean(errors.bedrooms)}
-              helperText={errors.bedrooms}
-            />
-          </Box>
+          {[
+            ["bedrooms", "Bedrooms"],
+            ["bathrooms", "Bathrooms"],
+            ["year_built", "Year Built"],
+          ].map(([name, label]) => (
+            <Box key={name} sx={{ gridColumn: { xs: "span 4", md: "span 2" } }}>
+              <TextField
+                fullWidth
+                required
+                type="number"
+                label={label}
+                name={name}
+                value={formData[name]}
+                onChange={handleChange}
+                error={Boolean(errors[name])}
+                helperText={errors[name]}
+                slotProps={
+                  name === "bathrooms"
+                    ? { htmlInput: { step: 0.5 } }
+                    : undefined
+                }
+              />
+            </Box>
+          ))}
 
-          <Box sx={{ gridColumn: { xs: "span 4", md: "span 2" } }}>
-            <TextField
-              fullWidth
-              required
-              type="number"
-              slotProps={{
-                htmlInput: {
-                  step: 0.5,
-                },
-              }}
-              label="Bathrooms"
-              name="bathrooms"
-              value={formData.bathrooms}
-              onChange={handleChange}
-              error={Boolean(errors.bathrooms)}
-              helperText={errors.bathrooms}
-            />
-          </Box>
-
-          <Box sx={{ gridColumn: { xs: "span 4", md: "span 2" } }}>
-            <TextField
-              fullWidth
-              required
-              type="number"
-              label="Year Built"
-              name="year_built"
-              value={formData.year_built}
-              onChange={handleChange}
-              error={Boolean(errors.year_built)}
-              helperText={errors.year_built}
-            />
-          </Box>
-
-          <Box sx={{ gridColumn: { xs: "span 12" } }}>
+          <Box sx={{ gridColumn: "span 12" }}>
             <TextField
               fullWidth
               required
@@ -348,14 +326,9 @@ export default function PropertyForm({
             />
           </Box>
         </Box>
-      </Paper>
+      </FormSection>
 
-      {/* Financial */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Financial
-        </Typography>
+      <FormSection title="Financial">
         <Box
           sx={{
             display: "grid",
@@ -384,11 +357,7 @@ export default function PropertyForm({
               name="purchase_date"
               value={formData.purchase_date}
               onChange={handleChange}
-              slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
-              }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Box>
 
@@ -405,14 +374,9 @@ export default function PropertyForm({
             />
           </Box>
         </Box>
-      </Paper>
+      </FormSection>
 
-      {/* Utilities */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Utilities
-        </Typography>
+      <FormSection title="Utilities">
         <Box
           sx={{
             display: "grid",
@@ -445,15 +409,9 @@ export default function PropertyForm({
             </Box>
           ))}
         </Box>
-      </Paper>
+      </FormSection>
 
-      {/* Notes */}
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Notes
-        </Typography>
-
+      <FormSection title="Notes">
         <TextField
           fullWidth
           multiline
@@ -463,22 +421,25 @@ export default function PropertyForm({
           onChange={handleChange}
           placeholder="Additional notes about this property..."
         />
-      </Paper>
+      </FormSection>
 
-      <Stack direction="row" justifyContent="flex-end" spacing={2}>
-        <Button
-          component={RouterLink}
-          to={cancelTo}
-          variant="outlined"
-          size="large"
-        >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          width: "100%",
+          gap: 1.5,
+          pt: 1,
+        }}
+      >
+        <Button component={RouterLink} to={cancelTo} variant="outlined">
           Cancel
         </Button>
 
-        <Button type="submit" variant="contained" size="large">
+        <Button type="submit" variant="contained">
           {submitLabel}
         </Button>
-      </Stack>
+      </Box>
     </Stack>
   );
 }

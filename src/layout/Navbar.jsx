@@ -10,19 +10,20 @@ import {
   List,
   ListItemButton,
   ListItemText,
+  Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
 
+import logo from "../assets/propertyops-logo.svg";
 import { useAuth } from "../auth/AuthContext";
 
 const drawerWidth = 240;
 
 export default function Navbar() {
   const { token, logout } = useAuth();
-
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function handleDrawerToggle() {
@@ -38,14 +39,8 @@ export default function Navbar() {
   }
 
   const navigationItems = [
-    {
-      label: "Dashboard",
-      to: "/",
-    },
-    {
-      label: "Properties",
-      to: "/properties",
-    },
+    { label: "Dashboard", to: "/" },
+    { label: "Properties", to: "/properties" },
   ];
 
   const drawer = (
@@ -54,15 +49,26 @@ export default function Navbar() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        bgcolor: "background.paper",
       }}
     >
-      <Toolbar>
-        <Typography variant="h6">PropertyPilot</Typography>
+      <Toolbar sx={{ px: 2.5, minHeight: 72 }}>
+        <Stack direction="row" spacing={1.25} alignItems="center">
+          <Box
+            component="img"
+            src={logo}
+            alt=""
+            sx={{ width: 28, height: 28 }}
+          />
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            PropertyPilot
+          </Typography>
+        </Stack>
       </Toolbar>
 
       <Divider />
 
-      <List>
+      <List sx={{ px: 1.25, py: 1.5 }}>
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.to}
@@ -70,8 +76,23 @@ export default function Navbar() {
             to={item.to}
             onClick={handleNavigation}
             sx={{
+              borderRadius: 2,
+              mb: 0.5,
+              px: 1.5,
+              py: 1.1,
+              color: "text.secondary",
+              "& .MuiListItemText-primary": {
+                fontWeight: 600,
+              },
               "&.active": {
-                backgroundColor: "action.selected",
+                bgcolor: "primary.light",
+                color: "primary.dark",
+                "& .MuiListItemText-primary": {
+                  fontWeight: 700,
+                },
+              },
+              "&:hover": {
+                bgcolor: "action.hover",
               },
             }}
           >
@@ -80,7 +101,7 @@ export default function Navbar() {
         ))}
       </List>
 
-      <Box sx={{ mt: "auto", p: 2 }}>
+      <Box sx={{ mt: "auto", p: 2.5 }}>
         <Button fullWidth variant="outlined" onClick={logout}>
           Log out
         </Button>
@@ -101,9 +122,7 @@ export default function Navbar() {
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+          ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", md: "none" },
             "& .MuiDrawer-paper": {
@@ -123,6 +142,7 @@ export default function Navbar() {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              borderRightColor: "divider",
             },
           }}
         >
@@ -133,12 +153,17 @@ export default function Navbar() {
       <Box
         sx={{
           display: { xs: "block", md: "none" },
+          position: "fixed",
+          top: 8,
+          left: 8,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
         <IconButton
           color="inherit"
           onClick={handleDrawerToggle}
-          aria-label="open navigation menu"
+          aria-label="Open navigation menu"
+          sx={{ bgcolor: "background.paper", boxShadow: 1 }}
         >
           <MenuIcon />
         </IconButton>

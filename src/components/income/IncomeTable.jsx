@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import {
+  Box,
   IconButton,
   Paper,
   Table,
@@ -96,15 +97,15 @@ export default function IncomeTable({ income, onDelete }) {
   }
 
   return (
-    <>
-      <Typography variant="h6" mb={2}>
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Total Income: ${totalIncome.toFixed(2)}
       </Typography>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ bgcolor: "action.hover" }}>
               {columns.map((column) => (
                 <TableCell key={column.id}>
                   <TableSortLabel
@@ -123,44 +124,39 @@ export default function IncomeTable({ income, onDelete }) {
 
           <TableBody>
             {paginatedIncome.map((record) => (
-              <TableRow key={record.id}>
+              <TableRow
+                key={record.id}
+                hover
+                sx={{ "&:last-child td": { borderBottom: 0 } }}
+              >
                 <TableCell>{formatDate(record.payment_date)}</TableCell>
-
                 <TableCell>{record.category || "—"}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  ${Number(record.amount).toFixed(2)}
+                </TableCell>
 
-                <TableCell>${Number(record.amount).toFixed(2)}</TableCell>
-
-                <TableCell
-                  sx={{
-                    maxWidth: 250,
-                  }}
-                >
+                <TableCell sx={{ maxWidth: 250 }}>
                   {record.note ? (
                     <Tooltip title={record.note} arrow>
-                      <Typography
-                        noWrap
-                        sx={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          cursor: "default",
-                        }}
-                      >
+                      <Typography noWrap color="text.secondary">
                         {record.note}
                       </Typography>
                     </Tooltip>
                   ) : (
-                    "—"
+                    <Typography color="text.secondary">—</Typography>
                   )}
                 </TableCell>
 
                 <TableCell align="right">
-                  <IconButton
-                    color="error"
-                    onClick={() => onDelete(record)}
-                    aria-label={`Delete income record ${record.id}`}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Tooltip title="Delete income">
+                    <IconButton
+                      color="error"
+                      onClick={() => onDelete(record)}
+                      aria-label={`Delete income record ${record.id}`}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
@@ -181,6 +177,6 @@ export default function IncomeTable({ income, onDelete }) {
           </TableFooter>
         </Table>
       </TableContainer>
-    </>
+    </Box>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
@@ -10,11 +11,12 @@ import {
   IconButton,
   Stack,
   Typography,
-  Button,
 } from "@mui/material";
 
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+
+import { getPropertyImage } from "../../utils/propertyImages";
 
 const CARDS_PER_PAGE = 3;
 
@@ -23,7 +25,6 @@ export default function RecentProperties({ properties }) {
   const [page, setPage] = useState(0);
 
   const pageCount = Math.ceil(properties.length / CARDS_PER_PAGE);
-
   const startIndex = page * CARDS_PER_PAGE;
   const visibleProperties = properties.slice(
     startIndex,
@@ -41,7 +42,12 @@ export default function RecentProperties({ properties }) {
   return (
     <Stack spacing={2}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="h5">Recent Properties</Typography>
+        <Box>
+          <Typography variant="h5">Recent Properties</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Your most recently added rentals.
+          </Typography>
+        </Box>
 
         {pageCount > 1 && (
           <Stack direction="row">
@@ -71,20 +77,29 @@ export default function RecentProperties({ properties }) {
             xs: "1fr",
             md: "repeat(3, 1fr)",
           },
-          gap: 2,
+          gap: 3,
         }}
       >
         {visibleProperties.map((property) => (
-          <Card key={property.id}>
+          <Card
+            key={property.id}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
             <CardMedia
               component="img"
               height="180"
-              image={property.cover_image_url}
+              image={getPropertyImage(property.cover_image_url)}
               alt={property.nickname}
+              sx={{ objectFit: "cover" }}
             />
 
-            <CardContent>
-              <Stack spacing={1.5}>
+            <CardContent sx={{ flexGrow: 1 }}>
+              <Stack spacing={1.5} sx={{ height: "100%" }}>
                 <Box>
                   <Typography variant="h6">{property.nickname}</Typography>
 
@@ -93,8 +108,18 @@ export default function RecentProperties({ properties }) {
                   </Typography>
                 </Box>
 
-                <Typography variant="h6">
-                  ${Number(property.monthly_rent).toFixed(2)}/mo
+                <Typography variant="h6" sx={{ mt: "auto" }}>
+                  ${Number(property.monthly_rent || 0).toFixed(2)}
+                  <Box
+                    component="span"
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    /mo
+                  </Box>
                 </Typography>
 
                 <Chip

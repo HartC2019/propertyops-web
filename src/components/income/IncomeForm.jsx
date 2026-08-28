@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   MenuItem,
   Stack,
@@ -27,16 +28,16 @@ export default function IncomeForm({ open, onClose, onSubmit }) {
   function handleChange(event) {
     const { name, value } = event.target;
 
-    setFormData({
-      ...formData,
+    setFormData((currentData) => ({
+      ...currentData,
       [name]: value,
-    });
+    }));
 
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors((currentErrors) => ({
+        ...currentErrors,
         [name]: "",
-      });
+      }));
     }
   }
 
@@ -54,7 +55,6 @@ export default function IncomeForm({ open, onClose, onSubmit }) {
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }
 
@@ -100,10 +100,14 @@ export default function IncomeForm({ open, onClose, onSubmit }) {
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <Stack component="form" onSubmit={handleSubmit} noValidate>
-        <DialogTitle>Add Income</DialogTitle>
+        <DialogTitle sx={{ pb: 0.5 }}>Add Income</DialogTitle>
 
         <DialogContent>
-          <Stack spacing={3} sx={{ pt: 1 }}>
+          <DialogContentText sx={{ mb: 3 }}>
+            Record income received for this property.
+          </DialogContentText>
+
+          <Stack spacing={2.5}>
             <TextField
               fullWidth
               required
@@ -129,8 +133,6 @@ export default function IncomeForm({ open, onClose, onSubmit }) {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              error={Boolean(errors.category)}
-              helperText={errors.category}
             >
               <MenuItem value="">None</MenuItem>
 
@@ -166,11 +168,12 @@ export default function IncomeForm({ open, onClose, onSubmit }) {
               name="note"
               value={formData.note}
               onChange={handleChange}
+              helperText="Optional"
             />
           </Stack>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1.5 }}>
           <Button onClick={handleClose}>Cancel</Button>
 
           <Button type="submit" variant="contained">

@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   MenuItem,
   Stack,
@@ -18,6 +19,15 @@ const initialFormData = {
   note: "",
 };
 
+const categories = [
+  "Maintenance",
+  "Tax",
+  "Enhancement",
+  "Utility",
+  "Insurance",
+  "Other",
+];
+
 export default function ExpenseForm({ open, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
@@ -25,23 +35,23 @@ export default function ExpenseForm({ open, onClose, onSubmit }) {
   function handleChange(event) {
     const { name, value } = event.target;
 
-    setFormData({
-      ...formData,
+    setFormData((currentData) => ({
+      ...currentData,
       [name]: value,
-    });
+    }));
 
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors((currentErrors) => ({
+        ...currentErrors,
         [name]: "",
-      });
+      }));
     }
   }
 
   function validateForm() {
     const newErrors = {};
 
-    if (formData.amount === "") {
+    if (formData.amount === "" || formData.amount === null) {
       newErrors.amount = "Amount is required.";
     } else if (Number(formData.amount) <= 0) {
       newErrors.amount = "Amount must be greater than 0.";
@@ -52,7 +62,6 @@ export default function ExpenseForm({ open, onClose, onSubmit }) {
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }
 
@@ -60,10 +69,29 @@ export default function ExpenseForm({ open, onClose, onSubmit }) {
     event.preventDefault();
 
     if (!validateForm()) {
+      setTimeout(() => {
+        document.activeElement?.blur();
+
+        const firstError = document.querySelector('[aria-invalid="true"]');
+
+        firstError?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 0);
+
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({
+      amount: Number(formData.amount),
+      category: formData.category || null,
+      expense_date: formData.expense_date,
+      note: formData.note || null,
+    });
+
+    setFormData(initialFormData);
+    setErrors({});
   }
 
   function handleClose() {
@@ -80,90 +108,88 @@ export default function ExpenseForm({ open, onClose, onSubmit }) {
       maxWidth="sm"
       disableRestoreFocus
     >
-      <DialogTitle>Add Expense</DialogTitle>
+      <Stack component="form" onSubmit={handleSubmit} noValidate>
+        <DialogTitle sx={{ pb: 0.5 }}>Add Expense</DialogTitle>
 
-      <DialogContent>
-        <Stack
-          component="form"
-          id="expense-form"
-          spacing={2}
-          sx={{ pt: 1 }}
-          onSubmit={handleSubmit}
-          noValidate
-        >
-          <TextField
-            fullWidth
-            required
-            type="number"
-            label="Amount"
-            name="amount"
-            value={formData.amount}
-            onChange={handleChange}
-            error={Boolean(errors.amount)}
-            helperText={errors.amount}
-            slotProps={{
-              htmlInput: {
-                min: 0,
-                step: 0.01,
-              },
-            }}
-          />
+        <DialogContent>
+          <DialogContentText sx={{ mb: 3 }}>
+            Record an expense paid for this property.
+          </DialogContentText>
 
-          <TextField
-            fullWidth
-            select
-            label="Category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            error={Boolean(errors.category)}
-            helperText={errors.category}
-          >
-            <MenuItem value="Maintenance">Maintenance</MenuItem>
-            <MenuItem value="Tax">Tax</MenuItem>
-            <MenuItem value="Enhancement">Enhancement</MenuItem>
-            <MenuItem value="Utility">Utility</MenuItem>
-            <MenuItem value="Insurance">Insurance</MenuItem>
-            <MenuItem value="Other">Other</MenuItem>
-          </TextField>
+          <Stack spacing={2.5}>
+            <TextField
+              fullWidth
+              required
+              type="number"
+              label="Amount"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              error={Boolean(errors.amount)}
+              helperText={errors.amount}
+              slotProps={{
+                htmlInput: {
+                  min: 0.01,
+                  step: 0.01,
+                },
+              }}
+            />
 
-          <TextField
-            fullWidth
-            required
-            type="date"
-            label="Expense Date"
-            name="expense_date"
-            value={formData.expense_date}
-            onChange={handleChange}
-            error={Boolean(errors.expense_date)}
-            helperText={errors.expense_date}
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-            }}
-          />
+            <TextField
+              fullWidth
+              select
+              label="Category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+            >
+              <MenuItem value="">None</MenuItem>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label="Note"
-            name="note"
-            value={formData.note}
-            onChange={handleChange}
-            helperText="Optional"
-          />
-        </Stack>
-      </DialogContent>
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </TextField>
 
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+            <TextField
+              fullWidth
+              required
+              type="date"
+              label="Expense Date"
+              name="expense_date"
+              value={formData.expense_date}
+              onChange={handleChange}
+              error={Boolean(errors.expense_date)}
+              helperText={errors.expense_date}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                },
+              }}
+            />
 
-        <Button type="submit" form="expense-form" variant="contained">
-          Add Expense
-        </Button>
-      </DialogActions>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Note"
+              name="note"
+              value={formData.note}
+              onChange={handleChange}
+              helperText="Optional"
+            />
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1.5 }}>
+          <Button onClick={handleClose}>Cancel</Button>
+
+          <Button type="submit" variant="contained">
+            Add Expense
+          </Button>
+        </DialogActions>
+      </Stack>
     </Dialog>
   );
 }

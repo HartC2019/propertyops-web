@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Container,
+  Paper,
   Stack,
   TextField,
   Typography,
@@ -13,14 +14,12 @@ import {
 
 import { useAuth } from "./AuthContext";
 
-/** A form that allows users to register for a new account */
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
-
   const [error, setError] = useState(null);
 
-  const onRegister = async (formData) => {
+  async function onRegister(formData) {
     const username = formData.get("username");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
@@ -31,29 +30,40 @@ export default function Register() {
     }
 
     try {
+      setError(null);
       await register({ username, password });
       navigate("/");
-    } catch (e) {
-      setError(e.message);
+    } catch (err) {
+      setError(err.message);
     }
-  };
+  }
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ py: 6 }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+      <Paper sx={{ p: { xs: 3, sm: 4 } }}>
         <Stack spacing={3}>
-          <Typography variant="h4" component="h1">
-            Create your PropertyPilot account
-          </Typography>
+          <Box>
+            <Typography variant="h4">Create your account</Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.75 }}
+            >
+              Start managing your rental portfolio in one place.
+            </Typography>
+          </Box>
+
+          {error && <Alert severity="error">{error}</Alert>}
 
           <Box component="form" action={onRegister}>
-            <Stack spacing={2}>
+            <Stack spacing={2.5}>
               <TextField
                 label="Username"
                 name="username"
                 type="text"
                 required
                 fullWidth
+                autoComplete="username"
               />
 
               <TextField
@@ -62,6 +72,7 @@ export default function Register() {
                 type="password"
                 required
                 fullWidth
+                autoComplete="new-password"
               />
 
               <TextField
@@ -70,21 +81,20 @@ export default function Register() {
                 type="password"
                 required
                 fullWidth
+                autoComplete="new-password"
               />
 
-              <Button type="submit" variant="contained">
+              <Button type="submit" variant="contained" fullWidth>
                 Create account
               </Button>
-
-              {error && <Alert severity="error">{error}</Alert>}
             </Stack>
           </Box>
 
-          <Typography>
+          <Typography variant="body2" color="text.secondary">
             Already have an account? <Link to="/login">Log in</Link>
           </Typography>
         </Stack>
-      </Box>
+      </Paper>
     </Container>
   );
 }

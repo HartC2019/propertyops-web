@@ -1,43 +1,67 @@
 import { Link as RouterLink } from "react-router-dom";
 
 import {
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Typography,
+  Box,
   Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Typography,
 } from "@mui/material";
+
+import { getPropertyImage } from "../../utils/propertyImages";
 
 export default function PropertyCard({ property }) {
   return (
-    <Card>
+    <Card
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <CardMedia
         component="img"
         height="180"
-        image={property.cover_image_url}
+        image={getPropertyImage(property.cover_image_url)}
         alt={property.nickname}
+        sx={{ objectFit: "cover" }}
       />
 
-      <CardContent>
+      <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="h6">{property.nickname}</Typography>
 
-        <Typography color="text.secondary">{property.street}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          {property.street}
+        </Typography>
 
-        <Typography color="text.secondary">
+        <Typography variant="body2" color="text.secondary">
           {property.city}, {property.state} {property.zip_code}
         </Typography>
 
-        <Typography sx={{ mt: 2 }}>
-          Monthly Rent: ${property.monthly_rent}
+        <Typography sx={{ mt: 2, fontWeight: 700 }}>
+          ${Number(property.monthly_rent || 0).toFixed(2)}
+          <Box
+            component="span"
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+            }}
+          >
+            /mo
+          </Box>
         </Typography>
       </CardContent>
 
-      <CardActions>
+      <CardActions sx={{ justifyContent: "center", p: 2, pt: 0 }}>
         <Button
           component={RouterLink}
           to={`/properties/${property.id}`}
           variant="contained"
+          fullWidth
         >
           View Details
         </Button>
